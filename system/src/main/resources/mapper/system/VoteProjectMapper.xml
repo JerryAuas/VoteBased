@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.VoteProjectMapper">
+  <resultMap id="BaseResultMap" type="com.ruoyi.system.domain.VoteProject">
+    <id column="vid" jdbcType="VARCHAR" property="vid" />
+    <result column="vname" jdbcType="VARCHAR" property="vname" />
+    <result column="vdesc" jdbcType="VARCHAR" property="vdesc" />
+    <result column="flag1" jdbcType="VARCHAR" property="flag1" />
+  </resultMap>
+  <resultMap id="CandidateMap" type="com.ruoyi.system.domain.Candidate">
+    <id column="user_id" property="userId" />
+    <result column="nick_name" jdbcType="VARCHAR" property="nickName"/>
+    <result column="email" jdbcType="VARCHAR" property="email"/>
+    <result column="phonenumber" jdbcType="VARCHAR" property="phonenumber"/>
+    <result column="sex" jdbcType="VARCHAR" property="sex"/>
+    <result column="avatar" jdbcType="VARCHAR" property="avatar"/>
+  </resultMap>
+  <resultMap id="VoterMap" type="com.ruoyi.system.domain.Voter">
+    <id column="user_id" property="userId" />
+    <result column="nick_name" jdbcType="VARCHAR" property="nickName"/>
+    <result column="email" jdbcType="VARCHAR" property="email"/>
+    <result column="phonenumber" jdbcType="VARCHAR" property="phonenumber"/>
+    <result column="sex" jdbcType="VARCHAR" property="sex"/>
+    <result column="avatar" jdbcType="VARCHAR" property="avatar"/>
+  </resultMap>
+  <resultMap id="UserMap" type="com.ruoyi.system.domain.Vuser">
+    <id column="user_id" property="userId"/>
+    <id column="nick_name" property="nickName"/>
+  </resultMap>
+  <resultMap id="CountMap" type="com.ruoyi.system.domain.VoteCount">
+    <id column="vote_num" property="voteNum"/>
+    <id column="user_id" property="userId"/>
+    <id column="nick_name" property="nickName"/>
+  </resultMap>
+  <sql id="Base_Column_List">
+    vid, vname, vdesc
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from vote_project
+    where vid = #{vid,jdbcType=VARCHAR}
+  </select>
+  <select id="selectAll"  resultMap="BaseResultMap" resultType="com.ruoyi.system.domain.VoteProject">
+    select * from vote_project
+  </select>
+  <select id="selectMy" parameterType="java.lang.Integer" resultMap="BaseResultMap" resultType="com.ruoyi.system.domain.VoteProject">
+    select vid,vname,vdesc,flag1 from vote_project,voter_project
+    where vote_project.vid = voter_project.project_id
+    and voter_project.voter_id = #{uid}
+  </select>
+  <select id="selectMyCan" parameterType="java.lang.String" resultMap="CandidateMap" resultType="com.ruoyi.system.domain.Candidate">
+    select user_id,nick_name,email,phonenumber,sex,avatar from candidate_project,sys_user
+    where candidate_project.candidate_id = sys_user.user_id
+    and candidate_project.project_id = #{vid}
+  </select>
+  <select id="selectMyVoter" parameterType="java.lang.String" resultMap="VoterMap" resultType="com.ruoyi.system.domain.Voter">
+    select user_id,nick_name,email,phonenumber,sex,avatar from voter_project,sys_user
+    where voter_project.voter_id = sys_user.user_id
+    and voter_project.project_id = #{vid}
+  </select>
+  <select id="selectAllUser"  resultMap="UserMap" resultType="com.ruoyi.system.domain.Vuser">
+    select user_id,nick_name from sys_user
+  </select>
+  <select id="selectVoteInfo" parameterType="java.lang.String" resultMap="CandidateMap" resultType="com.ruoyi.system.domain.Candidate">
+    SELECT user_id,nick_name,email,phonenumber,sex,avatar from vote_result,sys_user WHERE sys_user.user_id = vote_result.cid AND vote_result.vid = #{vid} ORDER BY user_id;
+  </select>
+  <select id="selectAllCount" parameterType="java.lang.String" resultMap="CountMap" resultType="com.ruoyi.system.domain.VoteCount">
+    SELECT count(*) vote_num,user_id,nick_name FROM vote_result,sys_user WHERE sys_user.user_id = vote_result.cid AND vote_result.vid = #{vid} GROUP BY user_id;
+  </select>
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from vote_project
+    where vid = #{vid,jdbcType=VARCHAR}
+  </delete>
+  <delete id="delVote" parameterType="java.lang.String">
+    delete from vote_result where vid = #{vid,jdbcType=VARCHAR}
+  </delete>
+
+
+  <insert id="insert" keyColumn="vid" keyProperty="vid" parameterType="com.ruoyi.system.domain.VoteProject" useGeneratedKeys="true">
+    insert into vote_project (vname, vdesc)
+    values (#{vname,jdbcType=VARCHAR}, #{vdesc,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertVote" parameterType="com.ruoyi.system.domain.VoteResult">
+    insert into vote_result (vid, cid) values (#{vid}, #{cid})
+  </insert>
+  <insert id="insertProject" parameterType="com.ruoyi.system.domain.VoteProject">
+    insert into vote_project (vid, vname, vdesc)
+    values (#{vid,jdbcType=VARCHAR}, #{vname,jdbcType=VARCHAR}, #{vdesc,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertVoter" parameterType="com.ruoyi.system.domain.VoterProject">
+    insert into voter_project (voter_id, project_id)
+    values (#{voterId}, #{projectId})
+  </insert>
+  <insert id="insertCandidate" parameterType="com.ruoyi.system.domain.CandidateProject">
+    insert into candidate_project (candidate_id, project_id)
+    values (#{candidateId}, #{projectId})
+  </insert>
+  <insert id="insertSelective" keyColumn="vid" keyProperty="vid" parameterType="com.ruoyi.system.domain.VoteProject" useGeneratedKeys="true">
+    insert into vote_project
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="vname != null">
+        vname,
+      </if>
+      <if test="vdesc != null">
+        vdesc,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="vname != null">
+        #{vname,jdbcType=VARCHAR},
+      </if>
+      <if test="vdesc != null">
+        #{vdesc,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.ruoyi.system.domain.VoteProject">
+    update vote_project
+    <set>
+      <if test="vname != null">
+        vname = #{vname,jdbcType=VARCHAR},
+      </if>
+      <if test="vdesc != null">
+        vdesc = #{vdesc,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where vid = #{vid,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.ruoyi.system.domain.VoteProject">
+    update vote_project
+    set vname = #{vname,jdbcType=VARCHAR},
+      vdesc = #{vdesc,jdbcType=VARCHAR}
+    where vid = #{vid,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateVoteState" parameterType="com.ruoyi.system.domain.VoterProject">
+    update voter_project
+    set flag1 = 1
+    where voter_id = #{voterId} and project_id = #{projectId}
+  </update>
+
+  <update id="updateIndex" parameterType="com.ruoyi.system.domain.VoterProject">
+    update sys_user
+    set avatar = #{projectId}
+    where user_id = #{voterId}
+  </update>
+</mapper>
